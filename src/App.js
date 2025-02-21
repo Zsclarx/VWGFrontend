@@ -27,7 +27,7 @@
     useEffect(() => {
       const fetchYears = async () => {
         try {
-          const response = await fetch("http://localhost:5001/api/getYears");
+          const response = await fetch("https://vwgbackend.onrender.com/api/getYears");
           const result = await response.json();
           if (response.ok) {
             setYears(result.years); // Assuming response contains an array of years
@@ -43,7 +43,7 @@
     const fetchFiles = async (year) => {
       setSelectedYear(year);
       try {
-        const response = await fetch(`http://localhost:5001/api/getFiles/${year}`);
+        const response = await fetch(`https://vwgbackend.onrender.com/api/getFiles/${year}`);
         const result = await response.json();
         if (response.ok) {
           setFiles(result.files);
@@ -58,7 +58,7 @@
       setSelectedFile(file);
       setIsEditable(false); // Make the table read-only when a file is selected
       try {
-        const response = await fetch(`http://localhost:5001/api/getPBUData/${file}`);
+        const response = await fetch(`https://vwgbackend.onrender.com/api/getPBUData/${file}`);
         const result = await response.json();
         if (response.ok) {
           const newHeaders = ["Code", "Parameters"];
@@ -95,7 +95,7 @@
 
     const createNewPBUTemplate = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/getSpreadsheetData`);
+        const response = await fetch(`https://vwgbackend.onrender.com/api/getSpreadsheetData`);
         const result = await response.json();
         if (response.ok) {
           setSelectedFile(null);
@@ -143,8 +143,8 @@
       try {
         const fileData = { data: dataRows };
         let url = selectedFile
-          ? `http://localhost:5001/api/saveFiles/${selectedYear}/${selectedFile}`
-          : `http://localhost:5001/api/saveFiles/${selectedYear}/newFile`;
+          ? `https://vwgbackend.onrender.com/api/saveFiles/${selectedYear}/${selectedFile}`
+          : `https://vwgbackend.onrender.com/api/saveFiles/${selectedYear}/newFile`;
 
         const response = await fetch(url, {
           method: "POST",
