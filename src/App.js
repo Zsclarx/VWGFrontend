@@ -18,7 +18,8 @@ const App = () => {
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isEditable, setIsEditable] = useState(false);
-
+  const [modelFrom, setModelFrom] = useState(1);
+  const [modelTo, setModelTo] = useState(2);
   const [hyperformulaInstance] = useState(() =>
     HyperFormula.buildEmpty({ licenseKey: 'internal-use-in-handsontable' })
   );
@@ -30,7 +31,7 @@ const App = () => {
         const response = await fetch("https://vwgbackend.onrender.com/api/getYears");
         const result = await response.json();
         if (response.ok) {
-          setYears(result.years); // Assuming response contains an array of years
+          setYears(result.years);
         }
       } catch (error) {
         setYears([2020, 2021, 2022, 2023, 2024, 2025]);
@@ -56,7 +57,7 @@ const App = () => {
 
   const fetchPBUData = async (file) => {
     setSelectedFile(file);
-    setIsEditable(false); // Make the table read-only when a file is selected
+    setIsEditable(false);
     try {
       const response = await fetch(`https://vwgbackend.onrender.com/api/getPBUData/${file}`);
       const result = await response.json();
@@ -93,6 +94,17 @@ const App = () => {
     link.click();
   };
 
+  useEffect(() => {
+    // Check if the user is logged in (token exists)
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login'); // Redirect to login if not logged in
+    } else {
+      // Call createNewPBUTemplate after landing on the page
+      createNewPBUTemplate();
+    }
+  }, [navigate]); 
+
   const createNewPBUTemplate = async () => {
     try {
       const response = await fetch(`https://vwgbackend.onrender.com/api/getSpreadsheetData`);
@@ -118,27 +130,22 @@ const App = () => {
   };
 
   const handleCopyToNextColumn = () => {
-    const hot = hotTableRef.current.hotInstance;
-    const selected = hot.getSelected(); // Get the currently selected cell(s)
-    if (!selected || selected.length === 0) {
-      alert("No cell selected");
-      return;
-    }
+    const fromColumn = modelFrom + 1;
+    const toColumn = modelTo + 1;
 
-    const selectedColumn = selected[0][1]; // Get the column index of the selected cell
-    if (selectedColumn === undefined) {
-      alert("Invalid column selected");
+    if (fromColumn === toColumn) {
+      alert("From and To columns must be different.");
       return;
     }
 
     const newDataRows = [...dataRows];
     newDataRows.forEach((row) => {
-      row[selectedColumn + 1] = row[selectedColumn];
+      row[toColumn] = row[fromColumn];
     });
-    setDataRows(newDataRows); // Update the table data
+
+    setDataRows(newDataRows);
   };
 
-  // Save data either in the selected file or a new one
   const saveData = async () => {
     try {
       const fileData = { data: dataRows };
@@ -165,11 +172,8 @@ const App = () => {
   };
 
   const handleLogout = () => {
-    // Clear localStorage
     localStorage.clear();
-
-    // Redirect to the Login page using window.location.href
-    window.location.href = 'https://vwg-frontend-alpha.vercel.app/login'; // Replace with your actual URL
+    window.location.href = 'https://vwg-frontend-alpha.vercel.app/login';
   };
 
   const highlightRows = [35, 47, 54, 55, 57, 68, 78, 79, 81, 83, 90, 104, 134, 136, 147, 158, 170, 183, 197, 212, 224, 235, 247, 267, 269];
@@ -185,9 +189,8 @@ const App = () => {
       engine: hyperformulaInstance,
       sheetName: 'Sheet1',
     },
-
     afterChange: (changes) => {
-      if (changes && isEditable) { // Only update formulas if editable
+      if (changes && isEditable) {
         changes.forEach(([row, col, _, newVal]) => {
           hyperformulaInstance.setCellContents({
             sheet: 0,
@@ -197,25 +200,19 @@ const App = () => {
         });
       }
     },
-
     afterOnCellMouseDown: (event, coords) => {
       const hot = hotTableRef.current.hotInstance;
       hot.selectCell(coords.row, coords.col);
     },
     cells: function (row, col) {
-      // Row highlight logic
       if (highlightRows.includes(row) && col === 1) {
         return { className: 'highlight-row' };
       }
-
-      // Column highlight logic
       if (col === 0) return { className: 'highlight-column-a' };
       if (col === 1) return { className: 'highlight-column' };
-
       if (!isEditable) {
         return { readOnly: true };
       }
-
       return { readOnly: false };
     },
     minSpareRows: 1,
@@ -237,25 +234,37 @@ const App = () => {
         {years.map((year) => (
           <button key={year} onClick={() => fetchFiles(year)}>PBU {year}</button>
         ))}
-        <h3>Files for "{selectedYear}" PBU</h3>
+        <h3>Files for {selectedYear} PBU</h3>
         {files.map((file) => (
           <button key={file} onClick={() => fetchPBUData(file)}>
-            {file.replace('.xlsx', '')} {/* Remove .xlsx extension */}
+            {file.replace('.xlsx', '')}
           </button>
         ))}
-
       </div>
-
       <div className="main-container">
         <div className="menu">
           <button onClick={exportCSV}>Export PBU</button>
           <button onClick={createNewPBUTemplate}>New PBU Template</button>
-          <button onClick={handleCopyToNextColumn}>Copy to Next Column</button>
-          <button onClick={saveData}>Save</button> {/* Save button */}
+          <select 
+            value={modelFrom} 
+            onChange={(e) => setModelFrom(Number(e.target.value))}
+          >
+            {headers.slice(2).map((_, index) => (
+              <option key={index} value={index + 1}>Model {index + 1}</option>
+            ))}
+          </select>
+          <select 
+            value={modelTo} 
+            onChange={(e) => setModelTo(Number(e.target.value))}
+          >
+            {headers.slice(2).map((_, index) => (
+              <option key={index} value={index + 1}>Model {index + 1}</option>
+            ))}
+          </select>
+          <button onClick={handleCopyToNextColumn}>Copy Data</button>
+          <button onClick={saveData}>Save</button>
           <button id="logout" onClick={handleLogout}>Logout</button>
         </div>
-
-
         <HotTable
           ref={hotTableRef}
           settings={hotSettings}

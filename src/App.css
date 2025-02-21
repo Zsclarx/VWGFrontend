@@ -312,10 +312,6 @@ td[contentEditable="true"]:empty {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-#logout {
-  background-color: rgb(249, 59, 59);
-  margin-left: auto; /* Push the logout button to the right */
-}
 
 
 .menu button:hover {
@@ -326,6 +322,40 @@ td[contentEditable="true"]:empty {
 .menu button:active {
   transform: scale(0.95); /* Slight press effect */
 }
+
+/* Dropdown styling */
+.menu select {
+  padding: 10px 15px;
+  background-color: #f1f1f1;
+  color: #333;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.menu select:hover {
+  background-color: #e0e0e0;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.menu select:focus {
+  outline: none;
+  box-shadow: 0px 0px 0px 2px #4CAF50;
+}
+
+/* Logout button */
+#logout {
+  background-color: rgb(249, 59, 59);
+  margin-left: auto;
+}
+
+#logout:hover {
+  background-color: #d32f2f;
+}
+
+
 
 
 /* Handsontable Styling */
