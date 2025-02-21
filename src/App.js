@@ -23,6 +23,7 @@ const App = () => {
   const [hyperformulaInstance] = useState(() =>
     HyperFormula.buildEmpty({ licenseKey: 'internal-use-in-handsontable' })
   );
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false); // To manage dropdown visibility
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -95,12 +96,10 @@ const App = () => {
   };
 
   useEffect(() => {
-    // Check if the user is logged in (token exists)
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/login'); // Redirect to login if not logged in
+      navigate('/login');
     } else {
-      // Call createNewPBUTemplate after landing on the page
       createNewPBUTemplate();
     }
   }, [navigate]); 
@@ -245,23 +244,37 @@ const App = () => {
         <div className="menu">
           <button onClick={exportCSV}>Export PBU</button>
           <button onClick={createNewPBUTemplate}>New PBU Template</button>
-          <select 
-            value={modelFrom} 
-            onChange={(e) => setModelFrom(Number(e.target.value))}
-          >
-            {headers.slice(2).map((_, index) => (
-              <option key={index} value={index + 1}>Model {index + 1}</option>
-            ))}
-          </select>
-          <select 
-            value={modelTo} 
-            onChange={(e) => setModelTo(Number(e.target.value))}
-          >
-            {headers.slice(2).map((_, index) => (
-              <option key={index} value={index + 1}>Model {index + 1}</option>
-            ))}
-          </select>
-          <button onClick={handleCopyToNextColumn}>Copy Data</button>
+
+          {/* Show only one button initially, which reveals the dropdowns and copy button */}
+          <div className="copy-data-container">
+            <button onClick={() => setIsDropdownVisible(!isDropdownVisible)}>
+              Copy Data
+            </button>
+
+            {/* Dropdown menu only appears when the Copy Data button is clicked */}
+            {isDropdownVisible && (
+              <div className="dropdown-menu">
+                <select 
+                  value={modelFrom} 
+                  onChange={(e) => setModelFrom(Number(e.target.value))}
+                >
+                  {headers.slice(2).map((_, index) => (
+                    <option key={index} value={index + 1}>Model {index + 1}</option>
+                  ))}
+                </select>
+                <select 
+                  value={modelTo} 
+                  onChange={(e) => setModelTo(Number(e.target.value))}
+                >
+                  {headers.slice(2).map((_, index) => (
+                    <option key={index} value={index + 1}>Model {index + 1}</option>
+                  ))}
+                </select>
+                <button onClick={handleCopyToNextColumn}>Copy</button>
+              </div>
+            )}
+          </div>
+
           <button onClick={saveData}>Save</button>
           <button id="logout" onClick={handleLogout}>Logout</button>
         </div>

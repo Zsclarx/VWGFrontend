@@ -299,9 +299,12 @@ td[contentEditable="true"]:empty {
 }
 
 /* Menu Button Styling */
-
+.menu select{
+  margin:5px;
+}
 
 .menu button {
+  
   padding: 12px 20px;
   background-color: #bdbdbd; /* Teal color for buttons */
   color: rgb(8, 8, 7);
