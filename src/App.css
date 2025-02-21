@@ -1,0 +1,393 @@
+/* Column Heading Styling */
+.ht_master th {
+  background: linear-gradient(to right, #4caf50, #2c6e2f); /* Gradient background */
+  color: white; 
+  font-size: 16px; 
+  font-weight: bold; /* Bold text */
+  text-align: center; /* Centered text */
+  padding: 12px 20px; /* Padding for better spacing */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow effect */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+}
+
+.handsontable th {
+  background-color: #ccd7d5;
+  color: #222;
+  font-weight: 400;
+  font-family: cursive;
+  font-size: 24px;
+  text-align: center;
+  white-space: nowrap;
+  align-content: center;
+  text-emphasis: initial;
+  border-radius: 12px; /* Rounded corners for a smoother 3D look */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), 0 -2px 5px rgba(255, 255, 255, 0.7); /* Create a subtle 3D shadow */
+  position: relative;
+  z-index: 1;
+  height: 60px;
+  transition: all 0.3s ease; /* Smooth transition for interaction effects */
+}
+
+.handsontable th:hover {
+  background-color: #8faa9e; /* Lighten background on hover */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 -4px 10px rgba(255, 255, 255, 0.6); /* Increase shadow on hover */
+  transform: translateY(-2px); /* Slight lift effect */
+}
+
+.handsontable th:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* Inset shadow when clicked */
+  transform: translateY(1px); /* Slight press effect */
+}
+
+.handsontable td{
+  height: 40px;
+  align-content: center;
+  background-color: rgba(250, 230, 249, 0.421);
+  font-size: 18px;
+  border-radius: 10px;
+}
+
+.ht_master th:hover {
+  background-color: #388e3c; /* Darker shade of green on hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow on hover */
+  transform: translateY(-2px); /* Slight lifting effect */
+}
+
+.ht_master th.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(to right, #4caf50, #2c6e2f); /* Gradient for sticky headers */
+  color: white;
+}
+
+.ht_master th .column-header-btn {
+  color: #ffffff;
+  font-size: 14px;
+  margin-left: 5px;
+  transition: color 0.3s ease;
+}
+
+.ht_master th .column-header-btn:hover {
+  color: #ffeb3b; /* Change icon color on hover */
+}
+
+/* For additional emphasis on the first column */
+.ht_master th:first-child {
+  background: linear-gradient(to right, #4caf50, #2c6e2f);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Optional: Add smooth transition when hovering over the header */
+.ht_master th {
+  cursor: pointer;
+}
+
+/* Container Styling */
+.app-container {
+  font-family: 'Arial', sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+/*highlighted row*/
+.highlight-row {
+  background-color: #ffcccc !important;
+  font-weight: bold;
+}
+
+/* Styling for highlighted columns with texture */
+.highlight-column {
+  background: linear-gradient(to bottom, #e0f7fa 0%, #b2ebf2 100%);
+  font-weight: bold;
+  color: #00796b;
+  border: 1px solid #004d40;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+/* Highlight column A with a different color */
+.highlight-column-a {
+  background: linear-gradient(to bottom, #f1f8e9 0%, #c5e1a5 100%);
+  font-weight: bold;
+  color: #388e3c;
+  border: 1px solid #2c6e2f;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover effect to enhance the 3D feel */
+.highlight-column:hover, .highlight-column-a:hover {
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Styling for action buttons */
+.actions {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.actions-buttons {
+  margin-right: 1rem;
+}
+
+.actions-buttonsSec {
+  display: flex;
+}
+
+.actions button {
+  padding: 10px 20px;
+  background-color: #00796b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.actions button:hover {
+  background-color: #004d40;
+}
+
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+table th, table td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  background-color: #f1f1f1;
+  z-index: 5;
+}
+
+/* Table cell styling */
+td {
+  min-width: 120px;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+td[contentEditable="true"]:empty {
+  background-color: #f8f8f8;
+}
+
+/* Overall Layout */
+.app-container {
+  display: flex;
+  font-family: 'Arial', sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+/* Sidebar Styling */
+/* Sidebar Styling */
+.side-nav {
+  width: 250px;
+  background-color: #3c8dbc; /* Light blue shade for sidebar */
+  padding: 20px;
+  height: 100vh;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-top: 100px;
+  border-radius: 15px; /* Softer rounded corners */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for a professional look */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease; /* Smooth slide-in effect and shadow transition */
+}
+
+.side-nav:hover {
+  transform: translateX(5px); /* Slight push when hovered */
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
+}
+
+/* Sidebar Heading Styling */
+.side-nav h2, .side-nav h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fbfbf8; /* Very light gray for headings */
+  margin-bottom: 15px;
+  text-transform: uppercase; /* Adds a professional touch */
+}
+
+/* Sidebar Button Styling */
+.side-nav button {
+  background-color: #bdbdbd; /* Lighter blue for buttons */
+  color: rgb(19, 18, 18);
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 10px; 
+  /* Softer rounded corners */
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+}
+
+.side-nav button:hover {
+  background-color: #f4f8fa; /* Darker blue shade on hover */
+  transform: translateX(3px); /* Slight push effect */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Hover effect shadow */
+}
+
+.side-nav button:active {
+  transform: translateX(1px); /* Press effect */
+}
+
+/* Additional Button Styling */
+.side-nav button:focus {
+  outline: none; /* Remove focus outline for cleaner appearance */
+}
+
+.side-nav .side-nav-button {
+  background-color: #b3d6f0; /* Very light blue-gray for secondary buttons */
+  color: #333;
+}
+
+.side-nav .side-nav-button:hover {
+  background-color: #99c2e8; /* Slightly darker shade on hover */
+}
+
+/* Main Container */
+.main-container {
+  flex-grow: 1;
+  margin-left: 10px; /* Adjust to accommodate the sidebar width */
+  overflow-y: scroll; /* Ensures the main container scrolls */
+  height: 100vh; /* Ensures the main container takes up full height */
+  padding-top: 20px; /* Adds padding at the top for better spacing */
+}
+
+/* Menu Styling - Make it sticky */
+.menu {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  top: 20px;
+  z-index: 5;
+  background-color: #3c8dbc; /* White background for menu */
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition effect */
+}
+
+.menu:hover {
+  transform: translateY(-5px); /* Slight lift effect on hover */
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
+}
+
+/* Menu Button Styling */
+
+
+.menu button {
+  padding: 12px 20px;
+  background-color: #bdbdbd; /* Teal color for buttons */
+  color: rgb(8, 8, 7);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+#logout {
+  background-color: rgb(249, 59, 59);
+  margin-left: auto; /* Push the logout button to the right */
+}
+
+
+.menu button:hover {
+  background-color: #f5f8fa; /* Darker teal on hover */
+  transform: scale(1.05); /* Slight scale effect */
+}
+
+.menu button:active {
+  transform: scale(0.95); /* Slight press effect */
+}
+
+
+/* Handsontable Styling */
+.handsontable th {
+  background-color: #ccd7d5;
+  color: #222;
+  font-weight: 400;
+  font-family: cursive;
+  font-size: 24px;
+  text-align: center;
+  border-radius: 12px;
+}
+
+.handsontable td {
+  height: 40px;
+  background-color: rgba(250, 230, 249, 0.421);
+  font-size: 18px;
+  border-radius: 10px;
+}
+
+.highlight-column {
+  background: linear-gradient(to bottom, #e0f7fa 0%, #b2ebf2 100%);
+}
+
+.highlight-column-a {
+  background: linear-gradient(to bottom, #f1f8e9 0%, #c5e1a5 100%);
+}
+
+.highlight-row {
+  background-color: #ffcccc !important;
+}
+
+/* Styling for action buttons */
+.actions {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.actions button {
+  padding: 10px 20px;
+  background-color: #00796b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.actions button:hover {
+  background-color: #004d40;
+}
+
+.app-logo {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  margin-left:60px;
+  width: 100px; /* Adjust based on your logo size */
+  height: auto;
+}
+
+
