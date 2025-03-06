@@ -35,7 +35,7 @@ const Login = ({ onLogin }) => {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5001/login", {
+      const response = await fetch("http://vwgbackend.onrender.com/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -60,7 +60,7 @@ const Login = ({ onLogin }) => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5001/register", {
+      const response = await fetch("http://vwgbackend.onrender.com/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

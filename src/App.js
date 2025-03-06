@@ -71,7 +71,7 @@ const App = () => {
   const fetchYears = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch("http://localhost:5001/api/getYears", {
+      const response = await fetch("http://vwgbackend.onrender.com/api/getYears", {
         headers: {
           'Authorization': token
         }
@@ -98,7 +98,7 @@ const App = () => {
     setSelectedYear(year);
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`http://localhost:5001/api/getFiles/${year}`, {
+      const response = await fetch(`http://vwgbackend.onrender.com/api/getFiles/${year}`, {
         headers: {
           'Authorization': token
         }
@@ -126,7 +126,7 @@ const App = () => {
     setIsEditable(false);
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`http://localhost:5001/api/getPBUData/${file}`, {
+      const response = await fetch(`http://vwgbackend.onrender.com/api/getPBUData/${file}`, {
         headers: {
           'Authorization': token
         }
@@ -177,7 +177,7 @@ const App = () => {
   // Create new PBU template (public endpoint, no auth needed)
   const createNewPBUTemplate = async () => {
     try {
-      const response = await fetch("http://localhost:5001/api/getSpreadsheetData");
+      const response = await fetch("http://vwgbackend.onrender.com/api/getSpreadsheetData");
       const result = await response.json();
       if (response.ok) {
         setSelectedFile(null);
@@ -212,7 +212,7 @@ const App = () => {
       });
     });
     try {
-      const response = await fetch("http://localhost:5001/api/saveFiles", {
+      const response = await fetch("http://vwgbackend.onrender.com/api/saveFiles", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
