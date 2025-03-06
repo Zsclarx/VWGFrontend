@@ -254,7 +254,7 @@ const App = () => {
   // Handle logout (unchanged)
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = 'https://https://vercel.com/zsclarxs-projects/vwg-frontend/login';
+    window.location.href = 'https://vwg-frontend-alpha.vercel.app/login';
   };
 
   // Handle copy to next column (unchanged)
