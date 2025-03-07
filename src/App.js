@@ -110,7 +110,14 @@ const App = () => {
       }
       const result = await response.json();
       if (response.ok) {
-        setFiles(result.files);
+        // Sort files by created_at to determine the order
+        const sortedFiles = result.files.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        // Assign a version number to each file
+        const filesWithVersion = sortedFiles.map((file, index) => ({
+          ...file,
+          displayName: `${year}_version_${index + 1}`
+        }));
+        setFiles(filesWithVersion);
       } else {
         alert(result.error || 'Error fetching files');
       }
@@ -235,7 +242,7 @@ const App = () => {
     }
   };
 
-  // Export CSV (unchanged)
+  // Export CSV
   const exportCSV = () => {
     const dataToExport = dataRows.map(row =>
       headers.reduce((obj, header, i) => {
@@ -251,13 +258,13 @@ const App = () => {
     link.click();
   };
 
-  // Handle logout (unchanged)
+  // Handle logout
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = 'https://vwg-frontend-alpha.vercel.app/login';
   };
 
-  // Handle copy to next column (unchanged)
+  // Handle copy to next column
   const handleCopyToNextColumn = () => {
     const fromColumn = modelFrom + 1;
     const toColumn = modelTo + 1;
@@ -297,7 +304,6 @@ const App = () => {
       return updatedRows;
     });
   };
-
 
   const FormulaPopup = ({ content, position }) => {
     if (!content) return null;
@@ -401,16 +407,6 @@ const App = () => {
     },
     afterOnCellMouseOver: (event, coords) => {
       const hot = hotTableRef.current.hotInstance;
-      const cellValue = hot.getDataAtCell(coords.row, coords.col);
-      if (cellValue && cellValue.toString().startsWith('=')) {
-        setPopupContent(cellValue);
-      } else {
-        setPopupContent('');
-      }
-    },
-
-    afterOnCellMouseOver: (event, coords) => {
-      const hot = hotTableRef.current.hotInstance;
       const cell = hot.getCell(coords.row, coords.col);
       if (!cell) return; // Exit if the cell doesn’t exist
   
@@ -436,10 +432,9 @@ const App = () => {
         setPopupContent(''); // Hide popup if no content
       }
     },
-    
     minSpareRows: 1,
     minSpareCols: 0,
-    rowHeight: 40,
+    rowHeight: 25,
     manualRowResize: true,
     manualColumnResize: true,
     allowInsertRow: true,
@@ -459,7 +454,7 @@ const App = () => {
         <h3>Files for {selectedYear} PBU</h3>
         {files.map((file) => (
           <button key={file.excel_id} onClick={() => fetchPBUData(file.excel_id)}>
-            {file.created_at}
+            {file.displayName}
           </button>
         ))}
       </div>

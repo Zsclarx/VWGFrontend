@@ -44,11 +44,11 @@
   transform: translateY(1px); /* Slight press effect */
 }
 
-.handsontable td{
-  height: 40px;
+.handsontable td {
+  height: 25px; /* Slimmer rows */
   align-content: center;
   background-color: rgba(250, 230, 249, 0.421);
-  font-size: 18px;
+  font-size: 14px; /* Smaller font size */
   border-radius: 10px;
 }
 
