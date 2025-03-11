@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import { HotTable } from '@handsontable/react';
-import { registerAllModules } from 'handsontable/registry';
-import { HyperFormula } from 'hyperformula';
-import 'handsontable/dist/handsontable.full.min.css';
-import './App.css';
-import { useNavigate } from 'react-router-dom';
-import * as Papa from 'papaparse';
+import { HotTable } from "@handsontable/react";
+import { registerAllModules } from "handsontable/registry";
+import { HyperFormula } from "hyperformula";
+import "handsontable/dist/handsontable.full.min.css";
+import "./App.css";
+import { useNavigate } from "react-router-dom";
+import * as Papa from "papaparse";
 
 registerAllModules();
+
+const initialHighlightRows = [
+  35, 47, 54, 55, 57, 68, 78, 79, 81, 83, 90, 104, 134, 136, 147, 158, 170,
+  183, 197, 212, 224, 235, 247, 267, 269,
+];
 
 const App = () => {
   const hotTableRef = useRef(null);
@@ -20,17 +25,18 @@ const App = () => {
   const [isEditable, setIsEditable] = useState(true);
   const [modelFrom, setModelFrom] = useState(1);
   const [modelTo, setModelTo] = useState(2);
-  const [popupContent, setPopupContent] = useState('');
+  const [popupContent, setPopupContent] = useState("");
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [hyperformulaInstance] = useState(() =>
-    HyperFormula.buildEmpty({ licenseKey: 'internal-use-in-handsontable' })
+    HyperFormula.buildEmpty({ licenseKey: "internal-use-in-handsontable" })
   );
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [highlightRows, setHighlightRows] = useState(initialHighlightRows);
   const navigate = useNavigate();
 
-  // Helper function to convert column index to letter (e.g., 0 -> "A", 1 -> "B")
+  // Helper functions (getColumnLetter, parseFieldKey) remain unchanged
   const getColumnLetter = (colIndex) => {
-    let letter = '';
+    let letter = "";
     let temp = colIndex;
     while (temp >= 0) {
       const remainder = temp % 26;
@@ -40,86 +46,88 @@ const App = () => {
     return letter;
   };
 
-  // Helper function to parse field_key to row and column indices (e.g., "A1" -> {row: 0, col: 0})
   const parseFieldKey = (field_key) => {
     const match = field_key.match(/([A-Z]+)(\d+)/);
     if (match) {
       const colLetter = match[1];
-      const rowNum = parseInt(match[2], 10) - 1; // rows are 1-based
+      const rowNum = parseInt(match[2], 10) - 1;
       let colIndex = 0;
       for (let i = 0; i < colLetter.length; i++) {
         colIndex = colIndex * 26 + (colLetter.charCodeAt(i) - 64);
       }
-      colIndex -= 1; // since A is 0
+      colIndex -= 1;
       return { row: rowNum, col: colIndex };
     }
     return null;
   };
 
-  // Check authentication on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
-      navigate('/login');
+      navigate("/login");
     } else {
       fetchYears();
       createNewPBUTemplate();
     }
   }, [navigate]);
 
-  // Fetch years with authentication
   const fetchYears = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     try {
-      const response = await fetch("https://vwgbackend.onrender.com/api/getYears", {
-        headers: {
-          'Authorization': token
+      const response = await fetch(
+        "https://vwgbackend.onrender.com/api/getYears",
+        {
+          headers: {
+            Authorization: token,
+          },
         }
-      });
+      );
       if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        navigate('/login');
+        localStorage.removeItem("token");
+        navigate("/login");
         return;
       }
       const result = await response.json();
       if (response.ok) {
         setYears(result.years);
       } else {
-        alert(result.error || 'Error fetching years');
+        alert(result.error || "Error fetching years");
       }
     } catch (error) {
       console.error("Error fetching years:", error);
-      setYears([2020, 2021, 2022, 2023, 2024, 2025]); // Fallback
+      setYears([]);
     }
   };
 
-  // Fetch files for a specific year with authentication
   const fetchFiles = async (year) => {
     setSelectedYear(year);
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`https://vwgbackend.onrender.com/api/getFiles/${year}`, {
-        headers: {
-          'Authorization': token
+      const response = await fetch(
+        `https://vwgbackend.onrender.com/api/getFiles/${year}`,
+        {
+          headers: {
+            Authorization: token,
+          },
         }
-      });
+      );
       if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        navigate('/login');
+        localStorage.removeItem("token");
+        navigate("/login");
         return;
       }
       const result = await response.json();
       if (response.ok) {
-        // Sort files by created_at to determine the order
-        const sortedFiles = result.files.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        // Assign a version number to each file
+        const sortedFiles = result.files.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
         const filesWithVersion = sortedFiles.map((file, index) => ({
           ...file,
-          displayName: `${year}_version_${index + 1}`
+          displayName: `${year}_version_${index + 1}`,
         }));
         setFiles(filesWithVersion);
       } else {
-        alert(result.error || 'Error fetching files');
+        alert(result.error || "Error fetching files");
       }
     } catch (error) {
       console.error("Error fetching files:", error);
@@ -127,37 +135,40 @@ const App = () => {
     }
   };
 
-  // Fetch PBU data with authentication and reconstruct 2D array
   const fetchPBUData = async (file) => {
     setSelectedFile(file);
     setIsEditable(false);
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     try {
       const response = await fetch(`https://vwgbackend.onrender.com/api/getPBUData/${file}`, {
         headers: {
-          'Authorization': token
-        }
+          Authorization: token,
+        },
       });
       if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        navigate('/login');
+        localStorage.removeItem("token");
+        navigate("/login");
         return;
       }
       const result = await response.json();
       if (response.ok) {
-        const cellData = result.data.map(item => {
-          const pos = parseFieldKey(item.field_key);
-          if (pos) {
-            return { row: pos.row, col: pos.col, value: item.field_value };
-          }
-          return null;
-        }).filter(item => item !== null);
-
+        const cellData = result.data
+          .map((item) => {
+            const pos = parseFieldKey(item.field_key);
+            if (pos) {
+              return { row: pos.row, col: pos.col, value: item.field_value };
+            }
+            return null;
+          })
+          .filter((item) => item !== null);
+  
         if (cellData.length > 0) {
-          const maxRow = Math.max(...cellData.map(cell => cell.row)) + 1;
-          const maxCol = Math.max(...cellData.map(cell => cell.col)) + 1;
-          const initialData = Array.from({ length: maxRow }, () => Array(maxCol).fill(''));
-          cellData.forEach(cell => {
+          const maxRow = Math.max(...cellData.map((cell) => cell.row)) + 1;
+          const maxCol = Math.max(...cellData.map((cell) => cell.col)) + 1;
+          const initialData = Array.from({ length: maxRow }, () =>
+            Array(maxCol).fill("")
+          );
+          cellData.forEach((cell) => {
             initialData[cell.row][cell.col] = cell.value;
           });
           setDataRows(initialData);
@@ -168,23 +179,34 @@ const App = () => {
             else newHeaders.push(`Model ${i - 1}`);
           }
           setHeaders(newHeaders);
+          
+          const parsedHighlightRows = Array.isArray(result.highlightRows)
+            ? result.highlightRows
+            : JSON.parse(result.highlightRows);
+          console.log("Setting highlightRows to:", parsedHighlightRows);
+          setHighlightRows(parsedHighlightRows || initialHighlightRows);
+          setTimeout(() => {
+            hotTableRef.current?.hotInstance?.render();
+          }, 0);
         } else {
           setDataRows([]);
           setHeaders([]);
+          setHighlightRows(initialHighlightRows);
         }
       } else {
-        alert(result.error || 'Error fetching PBU data');
+        alert(result.error || "Error fetching PBU data");
       }
     } catch (error) {
       console.error("Error fetching PBU data:", error);
       alert("Error fetching PBU data");
     }
   };
-
-  // Create new PBU template (public endpoint, no auth needed)
+  
   const createNewPBUTemplate = async () => {
     try {
-      const response = await fetch("https://vwgbackend.onrender.com/api/getSpreadsheetData");
+      const response = await fetch(
+        "https://vwgbackend.onrender.com/api/getSpreadsheetData"
+      );
       const result = await response.json();
       if (response.ok) {
         setSelectedFile(null);
@@ -195,12 +217,13 @@ const App = () => {
           newHeaders.push(`Model ${i - 2}`);
         }
         setHeaders(newHeaders);
-        const initialData = result.data.map(row =>
-          newHeaders.map((header, i) => row[`Column${i + 1}`] || '')
+        const initialData = result.data.map((row) =>
+          newHeaders.map((header, i) => row[`Column${i + 1}`] || "")
         );
         setDataRows(initialData);
+        setHighlightRows(initialHighlightRows);
       } else {
-        alert(result.error || 'Error fetching template data');
+        alert(result.error || "Error fetching template data");
       }
     } catch (error) {
       console.error("Error fetching template data:", error);
@@ -208,9 +231,8 @@ const App = () => {
     }
   };
 
-  // Save data with authentication and transform to backend format
   const saveData = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     const jsonData = [];
     dataRows.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
@@ -219,20 +241,27 @@ const App = () => {
       });
     });
     try {
-      const response = await fetch("https://vwgbackend.onrender.com/api/saveFiles", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": token
-        },
-        body: JSON.stringify({ data: jsonData })
-      });
+      const payload = {
+        data: jsonData,
+        highlightRows: highlightRows,
+      };
+      const response = await fetch(
+        "https://vwgbackend.onrender.com/api/saveFiles",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
       const result = await response.json();
       if (response.ok) {
         alert(result.message);
       } else if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        navigate('/login');
+        localStorage.removeItem("token");
+        navigate("/login");
       } else {
         alert(result.error || "Error saving file");
       }
@@ -242,11 +271,10 @@ const App = () => {
     }
   };
 
-  // Export CSV
   const exportCSV = () => {
-    const dataToExport = dataRows.map(row =>
+    const dataToExport = dataRows.map((row) =>
       headers.reduce((obj, header, i) => {
-        obj[header] = row[i] || '';
+        obj[header] = row[i] || "";
         return obj;
       }, {})
     );
@@ -258,13 +286,11 @@ const App = () => {
     link.click();
   };
 
-  // Handle logout
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = 'https://vwg-frontend-alpha.vercel.app/login';
+    window.location.href = "https://vwg-frontend-alpha.vercel.app/login";
   };
 
-  // Handle copy to next column
   const handleCopyToNextColumn = () => {
     const fromColumn = modelFrom + 1;
     const toColumn = modelTo + 1;
@@ -279,13 +305,11 @@ const App = () => {
     setDataRows(newDataRows);
   };
 
-  const [highlightRows, setHighlightRows] = useState([
-    34, 46, 53, 54, 56, 67, 77, 78, 80, 82, 89, 103, 133, 135, 146, 157, 169, 182, 196, 211, 223, 234, 246, 266, 268
-  ]);
-
   const handleRowAddition = (index, amount) => {
     setHighlightRows((prevRows) => {
-      const updatedRows = prevRows.map((row) => (row >= index ? row + amount : row));
+      const updatedRows = prevRows.map((row) =>
+        row >= index ? row + amount : row
+      );
       setTimeout(() => {
         hotTableRef.current?.hotInstance?.render();
       }, 0);
@@ -308,15 +332,15 @@ const App = () => {
   const FormulaPopup = ({ content, position }) => {
     if (!content) return null;
     return (
-      <div 
+      <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: `${position.x}px`,
           top: `${position.y}px`,
-          backgroundColor: 'white',
-          border: '1px solid #ccc',
-          padding: '5px',
-          borderRadius: '3px',
+          backgroundColor: "white",
+          border: "1px solid #ccc",
+          padding: "5px",
+          borderRadius: "3px",
           zIndex: 1000,
         }}
       >
@@ -339,48 +363,47 @@ const App = () => {
     data: dataRows,
     colHeaders: headers,
     rowHeaders: dataRows.length > 1,
-    height: 'auto',
-    licenseKey: 'non-commercial-and-evaluation',
+    height: "auto",
+    licenseKey: "non-commercial-and-evaluation",
     contextMenu: {
       items: {
-        "row_above": {},
-        "row_below": {},
-        "remove_row": {},
-        "highlight_row": {
-          name: 'Highlight Row',
+        row_above: {},
+        row_below: {},
+        remove_row: {},
+        highlight_row: {
+          name: "Highlight Row",
           callback: (key, selection) => {
             const row = selection[0].start.row;
             handleHighlightRow(row);
-          }
+          },
         },
-        "unhighlight_row": {
-          name: 'Unhighlight Row',
+        unhighlight_row: {
+          name: "Unhighlight Row",
           callback: (key, selection) => {
             const row = selection[0].start.row;
-            setHighlightRows((prevRows) => prevRows.filter(r => r !== row));
+            setHighlightRows((prevRows) => prevRows.filter((r) => r !== row));
             setTimeout(() => {
               hotTableRef.current?.hotInstance?.render();
             }, 0);
-          }
+          },
         },
-        "col_left": {},
-        "col_right": {},
-        "remove_col": {},
-        "copy": {},
-      }
+        col_left: {},
+        col_right: {},
+        remove_col: {},
+        copy: {},
+      },
     },
     formulas: {
       engine: hyperformulaInstance,
-      sheetName: 'Sheet1',
+      sheetName: "Sheet1",
     },
     afterChange: (changes) => {
       if (changes && isEditable) {
         changes.forEach(([row, col, _, newVal]) => {
-          hyperformulaInstance.setCellContents({
-            sheet: 0,
-            row,
-            col,
-          }, [[newVal]]);
+          hyperformulaInstance.setCellContents(
+            { sheet: 0, row, col },
+            [[newVal]]
+          );
         });
       }
     },
@@ -396,10 +419,10 @@ const App = () => {
     },
     cells: function (row, col) {
       if (highlightRows.includes(row) && col === 1) {
-        return { className: 'highlight-row' };
+        return { className: "highlight-row" };
       }
-      if (col === 0) return { className: 'highlight-column-a' };
-      if (col === 1) return { className: 'highlight-column' };
+      if (col === 0) return { className: "highlight-column-a" };
+      if (col === 1) return { className: "highlight-column" };
       if (!isEditable) {
         return { readOnly: true };
       }
@@ -408,28 +431,31 @@ const App = () => {
     afterOnCellMouseOver: (event, coords) => {
       const hot = hotTableRef.current.hotInstance;
       const cell = hot.getCell(coords.row, coords.col);
-      if (!cell) return; // Exit if the cell doesn’t exist
-  
-      // Get the formula from HyperFormula
-      const formula = hyperformulaInstance.getCellFormula({ sheet: 0, row: coords.row, col: coords.col });
-  
+      if (!cell) return;
+
+      const formula = hyperformulaInstance.getCellFormula({
+        sheet: 0,
+        row: coords.row,
+        col: coords.col,
+      });
+
       let content;
       if (formula) {
-        // If a formula exists, use it as the popup content
         content = formula;
       } else {
-        // Otherwise, use the cell’s value
         const value = hot.getDataAtCell(coords.row, coords.col);
-        content = value !== null && value !== undefined ? value.toString() : '';
+        content = value !== null && value !== undefined ? value.toString() : "";
       }
-  
-      // Set popup content and position
+
       if (content) {
         const cellRect = cell.getBoundingClientRect();
         setPopupContent(content);
-        setPopupPosition({ x: cellRect.left + window.scrollX, y: cellRect.bottom + window.scrollY });
+        setPopupPosition({
+          x: cellRect.left + window.scrollX,
+          y: cellRect.bottom + window.scrollY,
+        });
       } else {
-        setPopupContent(''); // Hide popup if no content
+        setPopupContent("");
       }
     },
     minSpareRows: 1,
@@ -445,19 +471,28 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <img src="/logo.png" alt="Logo" className="app-logo" />
-      <div className="side-nav">
-        <h2>PBU</h2>
-        {years.map((year) => (
-          <button key={year} onClick={() => fetchFiles(year)}>PBU {year}</button>
-        ))}
-        <h3>Files for {selectedYear} PBU</h3>
-        {files.map((file) => (
-          <button key={file.excel_id} onClick={() => fetchPBUData(file.excel_id)}>
-            {file.displayName}
-          </button>
-        ))}
-      </div>
+      {years.length > 0 && (
+        <>
+          <img src="/logo.png" alt="Logo" className="app-logo" />
+          <div className="side-nav">
+            <h2>PBU</h2>
+            {years.map((year) => (
+              <button key={year} onClick={() => fetchFiles(year)}>
+                PBU {year}
+              </button>
+            ))}
+            <h3>Files for {selectedYear} PBU</h3>
+            {files.map((file) => (
+              <button
+                key={file.excel_id}
+                onClick={() => fetchPBUData(file.excel_id)}
+              >
+                {file.displayName}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
       <div className="main-container">
         <div className="menu">
           <button onClick={exportCSV}>Export PBU</button>
@@ -467,21 +502,28 @@ const App = () => {
               Copy Data
             </button>
             {isDropdownVisible && (
-              <div className="dropdown-menu">
-                <select 
-                  value={modelFrom} 
+              <div
+                className="dropdown-menu"
+                onMouseOver={(e) => e.stopPropagation()}
+              >
+                <select
+                  value={modelFrom}
                   onChange={(e) => setModelFrom(Number(e.target.value))}
                 >
                   {headers.slice(2).map((_, index) => (
-                    <option key={index} value={index + 1}>Model {index + 1}</option>
+                    <option key={index} value={index + 1}>
+                      Model {index + 1}
+                    </option>
                   ))}
                 </select>
-                <select 
-                  value={modelTo} 
+                <select
+                  value={modelTo}
                   onChange={(e) => setModelTo(Number(e.target.value))}
                 >
                   {headers.slice(2).map((_, index) => (
-                    <option key={index} value={index + 1}>Model {index + 1}</option>
+                    <option key={index} value={index + 1}>
+                      Model {index + 1}
+                    </option>
                   ))}
                 </select>
                 <button onClick={handleCopyToNextColumn}>Copy</button>
@@ -489,12 +531,11 @@ const App = () => {
             )}
           </div>
           <button onClick={saveData}>Save</button>
-          <button id="logout" onClick={handleLogout}>Logout</button>
+          <button id="logout" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
-        <HotTable
-          ref={hotTableRef}
-          settings={hotSettings}
-        />
+        <HotTable ref={hotTableRef} settings={hotSettings} />
         <FormulaPopup content={popupContent} position={popupPosition} />
       </div>
     </div>
