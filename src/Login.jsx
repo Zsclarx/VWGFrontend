@@ -3,18 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import Image from "./bgImage.png";
 import Logo from "./LoginPageLogo.png";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
-// import './Login.css'; // Ensure you have a corresponding CSS file
 
 const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false); // Toggle between login and register
+  const [isRegistering, setIsRegistering] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
   const navigate = useNavigate();
 
-  // Check if user is already logged in
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -22,7 +20,6 @@ const Login = ({ onLogin }) => {
     }
   }, [navigate]);
 
-  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -31,11 +28,10 @@ const Login = ({ onLogin }) => {
     }));
   };
 
-  // Handle login form submission
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("https://vwgbackend.onrender.com/login", {
+      const response = await fetch("http://localhost:5001/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -56,11 +52,10 @@ const Login = ({ onLogin }) => {
     }
   };
 
-  // Handle registration form submission
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("https://vwgbackend.onrender.com/register", {
+      const response = await fetch("http://localhost:5001/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -70,8 +65,27 @@ const Login = ({ onLogin }) => {
       const result = await response.json();
       if (response.ok) {
         alert("User registered successfully");
-        setIsRegistering(false); // Switch back to login after registration
-        setFormData({ username: '', password: '' }); // Clear form
+        // Automatically log in after registration
+        try {
+          const loginResponse = await fetch("http://localhost:5001/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+          });
+          const loginResult = await loginResponse.json();
+          if (loginResponse.ok) {
+            localStorage.setItem('token', loginResult.token);
+            onLogin(loginResult.token);
+            navigate('/');
+          } else {
+            alert(loginResult.message || 'Login failed after registration');
+          }
+        } catch (error) {
+          console.error("Error during automatic login:", error);
+          alert("An error occurred during automatic login");
+        }
       } else {
         alert(result.message || 'Registration failed');
       }
@@ -80,6 +94,8 @@ const Login = ({ onLogin }) => {
       alert("An error occurred during registration");
     }
   };
+
+
 
   return (
     <div className="login-main">
