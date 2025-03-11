@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { HotTable } from "@handsontable/react";
 import { registerAllModules } from "handsontable/registry";
 import { HyperFormula } from "hyperformula";
@@ -26,7 +26,6 @@ const App = () => {
   const [modelFrom, setModelFrom] = useState(1);
   const [modelTo, setModelTo] = useState(2);
   const [popupContent, setPopupContent] = useState("");
-  const [isFetching, setIsFetching] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [hyperformulaInstance] = useState(() =>
     HyperFormula.buildEmpty({ licenseKey: "internal-use-in-handsontable" })
@@ -35,7 +34,7 @@ const App = () => {
   const [highlightRows, setHighlightRows] = useState(initialHighlightRows);
   const navigate = useNavigate();
 
-  // Helper functions (getColumnLetter, parseFieldKey) remain unchanged
+  // Helper functions remain unchanged
   const getColumnLetter = (colIndex) => {
     let letter = "";
     let temp = colIndex;
@@ -76,7 +75,7 @@ const App = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        "http://localhost:5001/api/getYears",
+        "https://vwgbackend.onrender.com/api/getYears",
         {
           headers: {
             Authorization: token,
@@ -101,13 +100,11 @@ const App = () => {
   };
 
   const fetchFiles = async (year) => {
-    if (isFetching) return; // Prevent concurrent fetches
-    setIsFetching(true);
     setSelectedYear(year);
     const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        `http://localhost:5001/api/getFiles/${year}`,
+        `https://vwgbackend.onrender.com/api/getFiles/${year}`,
         {
           headers: {
             Authorization: token,
@@ -135,20 +132,22 @@ const App = () => {
     } catch (error) {
       console.error("Error fetching files:", error);
       alert("Error fetching files");
-    } finally {
-      setIsFetching(false); // Reset fetching state
     }
   };
+
   const fetchPBUData = async (file) => {
     setSelectedFile(file);
     setIsEditable(false);
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`http://localhost:5001/api/getPBUData/${file}`, {
-        headers: {
-          Authorization: token,
-        },
-      });
+      const response = await fetch(
+        `https://vwgbackend.onrender.com/api/getPBUData/${file}`,
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
       if (response.status === 401 || response.status === 403) {
         localStorage.removeItem("token");
         navigate("/login");
@@ -165,7 +164,7 @@ const App = () => {
             return null;
           })
           .filter((item) => item !== null);
-  
+
         if (cellData.length > 0) {
           const maxRow = Math.max(...cellData.map((cell) => cell.row)) + 1;
           const maxCol = Math.max(...cellData.map((cell) => cell.col)) + 1;
@@ -183,7 +182,7 @@ const App = () => {
             else newHeaders.push(`Model ${i - 1}`);
           }
           setHeaders(newHeaders);
-          
+
           const parsedHighlightRows = Array.isArray(result.highlightRows)
             ? result.highlightRows
             : JSON.parse(result.highlightRows);
@@ -205,11 +204,11 @@ const App = () => {
       alert("Error fetching PBU data");
     }
   };
-  
+
   const createNewPBUTemplate = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5001/api/getSpreadsheetData"
+        "https://vwgbackend.onrender.com/api/getSpreadsheetData"
       );
       const result = await response.json();
       if (response.ok) {
@@ -250,7 +249,7 @@ const App = () => {
         highlightRows: highlightRows,
       };
       const response = await fetch(
-        "http://localhost:5001/api/saveFiles",
+        "https://vwgbackend.onrender.com/api/saveFiles",
         {
           method: "POST",
           headers: {
@@ -263,7 +262,12 @@ const App = () => {
       const result = await response.json();
       if (response.ok) {
         alert(result.message);
-        window.location.reload(); // Reload the page after successful save
+        // Check for a new token in the response and update localStorage
+        if (result.newToken) {
+          localStorage.setItem("token", result.newToken);
+        }
+        // Refresh years to ensure consistency with the new token
+        fetchYears();
       } else if (response.status === 401 || response.status === 403) {
         localStorage.removeItem("token");
         navigate("/login");
@@ -364,89 +368,6 @@ const App = () => {
     }, 0);
   };
 
-
-
-  // Memoized functions for hotSettings
-  const cells = useCallback((row, col) => {
-    if (highlightRows.includes(row) && col === 1) {
-      return { className: "highlight-row" };
-    }
-    if (col === 0) return { className: "highlight-column-a" };
-    if (col === 1) return { className: "highlight-column" };
-    if (!isEditable) {
-      return { readOnly: true };
-    }
-    return { readOnly: false };
-  }, [highlightRows, isEditable]);
-
-  const afterChange = useCallback((changes) => {
-    if (changes && isEditable) {
-      changes.forEach(([row, col, _, newVal]) => {
-        hyperformulaInstance.setCellContents(
-          { sheet: 0, row, col },
-          [[newVal]]
-        );
-      });
-    }
-  }, [isEditable, hyperformulaInstance]);
-
-  const afterOnCellMouseDown = useCallback((event, coords) => {
-    const hot = hotTableRef.current.hotInstance;
-    hot.selectCell(coords.row, coords.col);
-  }, []);
-
-  const afterCreateRow = useCallback((index, amount) => {
-    handleRowAddition(index, amount);
-  }, [handleRowAddition]);
-
-  const afterRemoveRow = useCallback((index, amount) => {
-    handleRowDeletion(index, amount);
-  }, [handleRowDeletion]);
-
-  const afterOnCellMouseOver = useCallback((event, coords) => {
-    const hot = hotTableRef.current.hotInstance;
-    const cell = hot.getCell(coords.row, coords.col);
-    if (!cell) return;
-
-    const formula = hyperformulaInstance.getCellFormula({
-      sheet: 0,
-      row: coords.row,
-      col: coords.col,
-    });
-
-    let content;
-    if (formula) {
-      content = formula;
-    } else {
-      const value = hot.getDataAtCell(coords.row, coords.col);
-      content = value !== null && value !== undefined ? value.toString() : "";
-    }
-
-    if (content) {
-      const cellRect = cell.getBoundingClientRect();
-      setPopupContent(content);
-      setPopupPosition({
-        x: cellRect.left + window.scrollX,
-        y: cellRect.bottom + window.scrollY,
-      });
-    } else {
-      setPopupContent("");
-    }
-  }, [hyperformulaInstance]);
-
-  const highlightRowCallback = useCallback((key, selection) => {
-    const row = selection[0].start.row;
-    handleHighlightRow(row);
-  }, [handleHighlightRow]);
-
-  const unhighlightRowCallback = useCallback((key, selection) => {
-    const row = selection[0].start.row;
-    setHighlightRows((prevRows) => prevRows.filter((r) => r !== row));
-    setTimeout(() => {
-      hotTableRef.current?.hotInstance?.render();
-    }, 0);
-  }, []);
-
   const hotSettings = {
     data: dataRows,
     colHeaders: headers,
@@ -460,11 +381,20 @@ const App = () => {
         remove_row: {},
         highlight_row: {
           name: "Highlight Row",
-          callback: highlightRowCallback,
+          callback: (key, selection) => {
+            const row = selection[0].start.row;
+            handleHighlightRow(row);
+          },
         },
         unhighlight_row: {
           name: "Unhighlight Row",
-          callback: unhighlightRowCallback,
+          callback: (key, selection) => {
+            const row = selection[0].start.row;
+            setHighlightRows((prevRows) => prevRows.filter((r) => r !== row));
+            setTimeout(() => {
+              hotTableRef.current?.hotInstance?.render();
+            }, 0);
+          },
         },
         col_left: {},
         col_right: {},
@@ -476,12 +406,67 @@ const App = () => {
       engine: hyperformulaInstance,
       sheetName: "Sheet1",
     },
-    afterChange,
-    afterOnCellMouseDown,
-    afterCreateRow,
-    afterRemoveRow,
-    afterOnCellMouseOver,
-    cells,
+    afterChange: (changes) => {
+      if (changes && isEditable) {
+        changes.forEach(([row, col, _, newVal]) => {
+          hyperformulaInstance.setCellContents(
+            { sheet: 0, row, col },
+            [[newVal]]
+          );
+        });
+      }
+    },
+    afterOnCellMouseDown: (event, coords) => {
+      const hot = hotTableRef.current.hotInstance;
+      hot.selectCell(coords.row, coords.col);
+    },
+    afterCreateRow: (index, amount) => {
+      handleRowAddition(index, amount);
+    },
+    afterRemoveRow: (index, amount) => {
+      handleRowDeletion(index, amount);
+    },
+    cells: function (row, col) {
+      if (highlightRows.includes(row) && col === 1) {
+        return { className: "highlight-row" };
+      }
+      if (col === 0) return { className: "highlight-column-a" };
+      if (col === 1) return { className: "highlight-column" };
+      if (!isEditable) {
+        return { readOnly: true };
+      }
+      return { readOnly: false };
+    },
+    afterOnCellMouseOver: (event, coords) => {
+      const hot = hotTableRef.current.hotInstance;
+      const cell = hot.getCell(coords.row, coords.col);
+      if (!cell) return;
+
+      const formula = hyperformulaInstance.getCellFormula({
+        sheet: 0,
+        row: coords.row,
+        col: coords.col,
+      });
+
+      let content;
+      if (formula) {
+        content = formula;
+      } else {
+        const value = hot.getDataAtCell(coords.row, coords.col);
+        content = value !== null && value !== undefined ? value.toString() : "";
+      }
+
+      if (content) {
+        const cellRect = cell.getBoundingClientRect();
+        setPopupContent(content);
+        setPopupPosition({
+          x: cellRect.left + window.scrollX,
+          y: cellRect.bottom + window.scrollY,
+        });
+      } else {
+        setPopupContent("");
+      }
+    },
     minSpareRows: 1,
     minSpareCols: 0,
     rowHeight: 25,
@@ -492,6 +477,7 @@ const App = () => {
     allowRemoveRow: true,
     allowRemoveColumn: true,
   };
+
   return (
     <div className="app-container">
       {years.length > 0 && (
