@@ -453,3 +453,8 @@ td[contentEditable="true"]:empty {
 }
 
 
+
+
+.sum-exceeds {
+  background-color: #ffcccc !important; /* Light red for cells when sum > 100 */
+}
