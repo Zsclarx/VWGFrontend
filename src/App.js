@@ -27,6 +27,7 @@ const App = () => {
   const [modelTo, setModelTo] = useState(2);
   const [popupContent, setPopupContent] = useState("");
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [row29Sum, setRow29Sum] = useState(0); // Added state
   const [hyperformulaInstance] = useState(() =>
     HyperFormula.buildEmpty({ licenseKey: "internal-use-in-handsontable" })
   );
@@ -34,7 +35,7 @@ const App = () => {
   const [highlightRows, setHighlightRows] = useState(initialHighlightRows);
   const navigate = useNavigate();
 
-  // Helper functions (getColumnLetter, parseFieldKey) remain unchanged
+  // Helper functions remain unchanged
   const getColumnLetter = (colIndex) => {
     let letter = "";
     let temp = colIndex;
@@ -140,11 +141,14 @@ const App = () => {
     setIsEditable(false);
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`https://vwgbackend.onrender.com/api/getPBUData/${file}`, {
-        headers: {
-          Authorization: token,
-        },
-      });
+      const response = await fetch(
+        `https://vwgbackend.onrender.com/api/getPBUData/${file}`,
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
       if (response.status === 401 || response.status === 403) {
         localStorage.removeItem("token");
         navigate("/login");
@@ -161,7 +165,7 @@ const App = () => {
             return null;
           })
           .filter((item) => item !== null);
-  
+
         if (cellData.length > 0) {
           const maxRow = Math.max(...cellData.map((cell) => cell.row)) + 1;
           const maxCol = Math.max(...cellData.map((cell) => cell.col)) + 1;
@@ -179,7 +183,7 @@ const App = () => {
             else newHeaders.push(`Model ${i - 1}`);
           }
           setHeaders(newHeaders);
-          
+
           const parsedHighlightRows = Array.isArray(result.highlightRows)
             ? result.highlightRows
             : JSON.parse(result.highlightRows);
@@ -201,7 +205,7 @@ const App = () => {
       alert("Error fetching PBU data");
     }
   };
-  
+
   const createNewPBUTemplate = async () => {
     try {
       const response = await fetch(
@@ -232,6 +236,12 @@ const App = () => {
   };
 
   const saveData = async () => {
+
+    if (row29Sum > 100) {
+      alert("Cannot save: Sum of percentages in row 29 exceeds 100");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     const jsonData = [];
     dataRows.forEach((row, rowIndex) => {
@@ -259,6 +269,12 @@ const App = () => {
       const result = await response.json();
       if (response.ok) {
         alert(result.message);
+        // Check for a new token in the response and update localStorage
+        if (result.newToken) {
+          localStorage.setItem("token", result.newToken);
+        }
+        // Refresh years to ensure consistency with the new token
+        fetchYears();
       } else if (response.status === 401 || response.status === 403) {
         localStorage.removeItem("token");
         navigate("/login");
@@ -359,6 +375,24 @@ const App = () => {
     }, 0);
   };
 
+
+  const calculateRow29Sum = () => {
+    const hot = hotTableRef.current?.hotInstance;
+    if (!hot) return;
+    let sum = 0;
+    for (let col = 2; col < hot.countCols(); col++) {
+      const cellValue = hyperformulaInstance.getCellValue({
+        sheet: 0,
+        row: 28, // Row 29 (0-based index)
+        col,
+      });
+      if (typeof cellValue === "number") {
+        sum += cellValue;
+      }
+    }
+    setRow29Sum(sum);
+  };
+
   const hotSettings = {
     data: dataRows,
     colHeaders: headers,
@@ -399,14 +433,36 @@ const App = () => {
     },
     afterChange: (changes) => {
       if (changes && isEditable) {
-        changes.forEach(([row, col, _, newVal]) => {
+        changes.forEach(([row, col, oldVal, newVal]) => {
+          if (row === 28 && col >= 2) { // Row 29, Model columns
+            const parsedValue = parseFloat(newVal);
+            const hot = hotTableRef.current.hotInstance;
+
+            // Check for non-numeric or invalid percentage
+            if (isNaN(parsedValue) || parsedValue < 0 || parsedValue > 100) {
+              alert("Invalid input: Only numbers between 0 and 100 are allowed.");
+              hot.setDataAtCell(row, col, oldVal); // Revert to previous value
+              return;
+            }
+
+            // Calculate sum excluding the current cell's old value
+            const currentSum = row29Sum - (parseFloat(oldVal) || 0);
+            if (currentSum + parsedValue > 100) {
+              alert("Sum of percentages in row 29 cannot exceed 100.");
+              hot.setDataAtCell(row, col, oldVal); // Revert to previous value
+              return;
+            }
+          }
+          // If valid, update HyperFormula
           hyperformulaInstance.setCellContents(
             { sheet: 0, row, col },
             [[newVal]]
           );
         });
       }
+      calculateRow29Sum();
     },
+    afterLoadData: calculateRow29Sum,
     afterOnCellMouseDown: (event, coords) => {
       const hot = hotTableRef.current.hotInstance;
       hot.selectCell(coords.row, coords.col);
@@ -418,15 +474,35 @@ const App = () => {
       handleRowDeletion(index, amount);
     },
     cells: function (row, col) {
-      if (highlightRows.includes(row) && col === 1) {
-        return { className: "highlight-row" };
+      const cellProperties = {};
+      let className = "";
+      if (col === 1) {
+        if (highlightRows.includes(row)) {
+          className += " highlight-row";
+        } else {
+          className += " highlight-column";
+        }
+      } else if (col === 0) {
+        className += " highlight-column-a";
       }
-      if (col === 0) return { className: "highlight-column-a" };
-      if (col === 1) return { className: "highlight-column" };
+      if (row === 28 && col >= 2 && row29Sum > 100) {
+        className += " sum-exceeds";
+      }
+      cellProperties.className = className.trim();
       if (!isEditable) {
-        return { readOnly: true };
+        cellProperties.readOnly = true;
+      } else {
+        cellProperties.readOnly = false;
+        if (row === 28 && col >= 2) {
+          cellProperties.type = "numeric";
+          cellProperties.validator = function (value, callback) {
+            const num = parseFloat(value);
+            callback(!isNaN(num) && num >= 0 && num <= 100);
+          };
+          cellProperties.allowInvalid = false;
+        }
       }
-      return { readOnly: false };
+      return cellProperties;
     },
     afterOnCellMouseOver: (event, coords) => {
       const hot = hotTableRef.current.hotInstance;
