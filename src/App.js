@@ -383,6 +383,14 @@ const saveData = async () => {
     setRow29Sum(sum);
   };
 
+  const toggleFiles = (year) => {
+    if (selectedYear === year) {
+      setSelectedYear(null); // Hide the file list
+    } else {
+      fetchFiles(year); // Fetch files and show the list
+    }
+  };
+
   const saveDraft = async () => {
     const token = localStorage.getItem("token");
     const jsonData = [];
@@ -414,56 +422,61 @@ const saveData = async () => {
     }
   };
 
+
   // **New Function: Open Draft**
   const openDraft = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch("https://vwgbackend.onrender.com/api/getDraft", {
-        headers: { Authorization: token },
-      });
-      if (response.status === 404) {
-        alert("No draft found");
-        return;
-      }
-      const result = await response.json();
-      if (response.ok) {
-        const cellData = result.data
-          .map((item) => {
-            const pos = parseFieldKey(item.field_key);
-            return pos ? { row: pos.row, col: pos.col, value: item.field_value } : null;
-          })
-          .filter((item) => item !== null);
-
-        if (cellData.length > 0) {
-          const maxRow = Math.max(...cellData.map((cell) => cell.row)) + 1;
-          const maxCol = Math.max(...cellData.map((cell) => cell.col)) + 1;
-          const initialData = Array.from({ length: maxRow }, () => Array(maxCol).fill(""));
-          cellData.forEach((cell) => {
-            initialData[cell.row][cell.col] = cell.value;
-          });
-          setDataRows(initialData);
-          const newHeaders = [];
-          for (let i = 0; i < maxCol; i++) {
-            if (i === 0) newHeaders.push("Code");
-            else if (i === 1) newHeaders.push("Parameters");
-            else newHeaders.push(`Model ${i - 1}`);
-          }
-          setHeaders(newHeaders);
-          setHighlightRows(result.highlightRows || initialHighlightRows);
-          setIsEditable(true);
-          setIsDraftOpen(true);
-          setTimeout(() => {
-            hotTableRef.current?.hotInstance?.render();
-          }, 0);
-        }
-      } else {
-        alert(result.error || "Error fetching draft");
-      }
-    } catch (error) {
-      console.error("Error fetching draft:", error);
-      alert("Error fetching draft");
+  const token = localStorage.getItem("token");
+  try {
+    const response = await fetch("https://vwgbackend.onrender.com/api/getDraft", {
+      headers: { Authorization: token },
+    });
+    if (response.status === 404) {
+      alert("No draft found");
+      return;
     }
-  };
+    const result = await response.json();
+    if (response.ok) {
+      const cellData = result.data
+        .map((item) => {
+          const pos = parseFieldKey(item.field_key);
+          return pos ? { row: pos.row, col: pos.col, value: item.field_value } : null;
+        })
+        .filter((item) => item !== null);
+
+      if (cellData.length > 0) {
+        const maxRow = Math.max(...cellData.map((cell) => cell.row)) + 1;
+        const maxCol = Math.max(...cellData.map((cell) => cell.col)) + 1;
+        const initialData = Array.from({ length: maxRow }, () => Array(maxCol).fill(""));
+        cellData.forEach((cell) => {
+          initialData[cell.row][cell.col] = cell.value;
+        });
+        setDataRows(initialData);
+        const newHeaders = [];
+        for (let i = 0; i < maxCol; i++) {
+          if (i === 0) newHeaders.push("Code");
+          else if (i === 1) newHeaders.push("Parameters");
+          else newHeaders.push(`Model ${i - 1}`);
+        }
+        setHeaders(newHeaders);
+        // Ensure highlightRows is an array; minimal parsing if backend is fixed
+        const parsedHighlightRows = Array.isArray(result.highlightRows)
+          ? result.highlightRows
+          : initialHighlightRows;
+        setHighlightRows(parsedHighlightRows);
+        setIsEditable(true);
+        setIsDraftOpen(true);
+        setTimeout(() => {
+          hotTableRef.current?.hotInstance?.render();
+        }, 0);
+      }
+    } else {
+      alert(result.error || "Error fetching draft");
+    }
+  } catch (error) {
+    console.error("Error fetching draft:", error);
+    alert("Error fetching draft");
+  }
+};
 
 
 
@@ -620,31 +633,29 @@ const saveData = async () => {
         <>
           <img src="/logo.png" alt="Logo" className="app-logo" />
           <div className="side-nav">
-            <h2>PBU</h2>
-            
-            <ul className="year-list">
-              {years.map((year) => (
-                <li key={year}>
-                  <button onClick={() => fetchFiles(year)}>
-                    PBU {year}
-                  </button>
-
-                  <button onClick={openDraft}>Open Draft</button> {/* New Button */}
-                  {selectedYear === year && files.length > 0 && (
-                    <ul className="file-list">
-                      {files.map((file) => (
-                        <li key={file.excel_id}>
-                          <button onClick={() => fetchPBUData(file.excel_id)}>
-                            {file.displayName}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+  <h2>PBU</h2>
+  <button onClick={openDraft}>Open Draft</button> {/* Moved outside the list */}
+  <ul className="year-list">
+    {years.map((year) => (
+      <li key={year}>
+        <button onClick={() => toggleFiles(year)}>
+          PBU {year}
+        </button>
+        {selectedYear === year && files.length > 0 && (
+          <ul className="file-list">
+            {files.map((file) => (
+              <li key={file.excel_id}>
+                <button onClick={() => fetchPBUData(file.excel_id)}>
+                  {file.displayName}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </li>
+    ))}
+  </ul>
+</div>
         </>
       )}
       <div className="main-container">
