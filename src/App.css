@@ -1,19 +1,20 @@
 /* Column Heading Styling */
 .ht_master th {
-  background: linear-gradient(to right, #4caf50, #2c6e2f); /* Gradient background */
-  color: white; 
-  font-size: 16px; 
-  font-weight: bold; /* Bold text */
-  text-align: center; /* Centered text */
-  border-radius: 8px; /* Rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow effect */
-  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+  background: linear-gradient(to right, #4caf50, #2c6e2f);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.colHeader{
-  height:40px;
-  padding:3px;
+.colHeader {
+  height: 40px;
+  padding: 3px;
 }
+
 .handsontable th {
   background-color: #ccd7d5;
   color: #222;
@@ -24,44 +25,39 @@
   white-space: nowrap;
   align-content: center;
   text-emphasis: initial;
-  border-radius: 12px; /* Rounded corners for a smoother 3D look */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), 0 -2px 5px rgba(255, 255, 255, 0.7); /* Create a subtle 3D shadow */
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), 0 -2px 5px rgba(255, 255, 255, 0.7);
   position: relative;
   z-index: 1;
   height: 2px;
-  transition: all 0.3s ease; /* Smooth transition for interaction effects */
+  transition: all 0.3s ease;
 }
 
 .handsontable th:hover {
-  background-color: #8faa9e; /* Lighten background on hover */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 -4px 10px rgba(255, 255, 255, 0.6); /* Increase shadow on hover */
-  transform: translateY(-2px); /* Slight lift effect */
-}
-
-.handsontable th:active {
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* Inset shadow when clicked */
-  transform: translateY(1px); /* Slight press effect */
+  background-color: #8faa9e;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 -4px 10px rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
 }
 
 .handsontable td {
-  height: 20px; /* Slimmer rows */
+  height: 20px;
   align-content: center;
   background-color: rgba(250, 230, 249, 0.421);
-  font-size: 14px; /* Smaller font size */
+  font-size: 14px;
   border-radius: 10px;
 }
 
 .ht_master th:hover {
-  background-color: #388e3c; /* Darker shade of green on hover */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow on hover */
-  transform: translateY(-2px); /* Slight lifting effect */
+  background-color: #388e3c;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 
 .ht_master th.sticky {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: linear-gradient(to right, #4caf50, #2c6e2f); /* Gradient for sticky headers */
+  background: linear-gradient(to right, #4caf50, #2c6e2f);
   color: white;
 }
 
@@ -73,35 +69,30 @@
 }
 
 .ht_master th .column-header-btn:hover {
-  color: #ffeb3b; /* Change icon color on hover */
+  color: #ffeb3b;
 }
 
-/* For additional emphasis on the first column */
 .ht_master th:first-child {
   background: linear-gradient(to right, #4caf50, #2c6e2f);
   font-weight: 700;
   color: #ffffff;
 }
 
-/* Optional: Add smooth transition when hovering over the header */
 .ht_master th {
   cursor: pointer;
 }
 
-/* Container Styling */
 .app-container {
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   padding: 20px;
   background-color: #f9f9f9;
 }
 
-/*highlighted row*/
 .highlight-row {
   background-color: #ffcccc !important;
   font-weight: bold;
 }
 
-/* Styling for highlighted columns with texture */
 .highlight-column {
   background: linear-gradient(to bottom, #e0f7fa 0%, #b2ebf2 100%);
   font-weight: bold;
@@ -110,10 +101,9 @@
   border-radius: 8px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
-  width:400px;
+  width: 400px;
 }
 
-/* Highlight column A with a different color */
 .highlight-column-a {
   background: linear-gradient(to bottom, #f1f8e9 0%, #c5e1a5 100%);
   font-weight: bold;
@@ -124,13 +114,12 @@
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-/* Hover effect to enhance the 3D feel */
-.highlight-column:hover, .highlight-column-a:hover {
+.highlight-column:hover,
+.highlight-column-a:hover {
   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
   transform: translateY(-2px);
 }
 
-/* Styling for action buttons */
 .actions {
   margin-bottom: 20px;
   display: flex;
@@ -161,14 +150,14 @@
   background-color: #004d40;
 }
 
-/* Table Styling */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
 
-table th, table td {
+table th,
+table td {
   text-align: left;
   border: 1px solid #ddd;
 }
@@ -180,7 +169,6 @@ table th, table td {
   z-index: 5;
 }
 
-/* Table cell styling */
 td {
   min-width: 120px;
   word-wrap: break-word;
@@ -191,19 +179,16 @@ td[contentEditable="true"]:empty {
   background-color: #f8f8f8;
 }
 
-/* Overall Layout */
 .app-container {
   display: flex;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   padding: 20px;
   background-color: #f9f9f9;
 }
 
-/* Sidebar Styling */
-/* Sidebar Styling */
 .side-nav {
   width: 250px;
-  background-color: #3c8dbc; /* Light blue shade for sidebar */
+  background-color: #3c8dbc;
   padding: 20px;
   height: 100vh;
   color: white;
@@ -212,102 +197,95 @@ td[contentEditable="true"]:empty {
   position: sticky;
   top: 0;
   z-index: 10;
-  margin-top: 100px;
-  border-radius: 15px; /* Softer rounded corners */
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for a professional look */
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease; /* Smooth slide-in effect and shadow transition */
+  margin-top: 150px;
+  border-radius: 15px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
 }
 
 .side-nav:hover {
-  transform: translateX(5px); /* Slight push when hovered */
-  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
+  transform: translateX(5px);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* Sidebar Heading Styling */
-.side-nav h2, .side-nav h3 {
+.side-nav h2,
+.side-nav h3 {
   font-size: 20px;
   font-weight: 600;
-  color: #fbfbf8; /* Very light gray for headings */
+  color: #fbfbf8;
   margin-bottom: 15px;
-  text-transform: uppercase; /* Adds a professional touch */
+  text-transform: uppercase;
 }
 
-/* Sidebar Button Styling */
 .side-nav button {
-  background-color: #bdbdbd; /* Lighter blue for buttons */
+  background-color: #bdbdbd;
   color: rgb(19, 18, 18);
   padding: 12px;
   margin: 10px 0;
   border: none;
-  border-radius: 10px; 
-  /* Softer rounded corners */
+  border-radius: 10px;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .side-nav button:hover {
-  background-color: #f4f8fa; /* Darker blue shade on hover */
-  transform: translateX(3px); /* Slight push effect */
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Hover effect shadow */
+  background-color: #f4f8fa;
+  transform: translateX(3px);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .side-nav button:active {
-  transform: translateX(1px); /* Press effect */
+  transform: translateX(1px);
 }
 
-/* Additional Button Styling */
 .side-nav button:focus {
-  outline: none; /* Remove focus outline for cleaner appearance */
+  outline: none;
 }
 
 .side-nav .side-nav-button {
-  background-color: #b3d6f0; /* Very light blue-gray for secondary buttons */
+  background-color: #b3d6f0;
   color: #333;
 }
 
 .side-nav .side-nav-button:hover {
-  background-color: #99c2e8; /* Slightly darker shade on hover */
+  background-color: #99c2e8;
 }
 
-/* Main Container */
 .main-container {
   flex-grow: 1;
-  margin-left: 10px; /* Adjust to accommodate the sidebar width */
-  overflow-y: scroll; /* Ensures the main container scrolls */
-  height: 100vh; /* Ensures the main container takes up full height */
-  padding-top: 20px; /* Adds padding at the top for better spacing */
+  margin-left: 10px;
+  overflow-y: scroll;
+  height: 100vh;
+  padding-top: 20px;
 }
 
-/* Menu Styling - Make it sticky */
 .menu {
   display: flex;
   gap: 15px;
-  margin-bottom: 40px;
+  margin-bottom: 60px;
   top: 20px;
   z-index: 5;
-  background-color: #3c8dbc; /* White background for menu */
+  background-color: #3c8dbc;
   padding: 15px;
   border-radius: 10px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition effect */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .menu:hover {
-  transform: translateY(-5px); /* Slight lift effect on hover */
-  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* Menu Button Styling */
-.menu select{
-  margin:5px;
+.menu select {
+  margin: 5px;
 }
 
 .menu button {
-  
   padding: 12px 20px;
-  background-color: #bdbdbd; /* Teal color for buttons */
+  background-color: #bdbdbd;
   color: rgb(8, 8, 7);
   border: none;
   border-radius: 8px;
@@ -316,18 +294,15 @@ td[contentEditable="true"]:empty {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-
-
 .menu button:hover {
-  background-color: #f5f8fa; /* Darker teal on hover */
-  transform: scale(1.05); /* Slight scale effect */
+  background-color: #f5f8fa;
+  transform: scale(1.05);
 }
 
 .menu button:active {
-  transform: scale(0.95); /* Slight press effect */
+  transform: scale(0.95);
 }
 
-/* Dropdown styling */
 .menu select {
   padding: 10px 15px;
   background-color: #f1f1f1;
@@ -346,10 +321,9 @@ td[contentEditable="true"]:empty {
 
 .menu select:focus {
   outline: none;
-  box-shadow: 0px 0px 0px 2px #4CAF50;
+  box-shadow: 0px 0px 0px 2px #4caf50;
 }
 
-/* Logout button */
 #logout {
   background-color: rgb(249, 59, 59);
   margin-left: auto;
@@ -357,20 +331,6 @@ td[contentEditable="true"]:empty {
 
 #logout:hover {
   background-color: #d32f2f;
-}
-
-
-
-
-/* Handsontable Styling */
-.handsontable th {
-  background-color: #ccd7d5;
-  color: #222;
-  font-weight: 400;
-  font-family: cursive;
-  font-size: 24px;
-  text-align: center;
-  border-radius: 12px;
 }
 
 .handsontable td {
@@ -392,7 +352,6 @@ td[contentEditable="true"]:empty {
   background-color: #ffcccc !important;
 }
 
-/* Styling for action buttons */
 .actions {
   margin-bottom: 20px;
   display: flex;
@@ -419,11 +378,10 @@ td[contentEditable="true"]:empty {
   position: fixed;
   top: 10px;
   left: 10px;
-  margin-left:60px;
-  width: 100px; /* Adjust based on your logo size */
+  margin-left: 60px;
+  width: 150px;
   height: auto;
 }
-
 
 #formula-bar {
   width: 100%;
@@ -431,7 +389,6 @@ td[contentEditable="true"]:empty {
   margin-bottom: 10px;
   font-size: 14px;
 }
-
 
 .copy-data-container {
   position: relative;
@@ -452,9 +409,59 @@ td[contentEditable="true"]:empty {
   gap: 10px;
 }
 
-
-
-
 .sum-exceeds {
-  background-color: #ffcccc !important; /* Light red for cells when sum > 100 */
+  background-color: #ffcccc !important;
+}
+
+/* New Styles for Requested Changes */
+
+/* Decrease row headers font-size */
+.ht_clone_left th {
+  font-size: 12px;
+}
+
+/* Tree structure for years and files */
+.year-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.year-list li {
+  margin: 5px 0;
+}
+
+.year-list li > button::before {
+  content: "📁";
+  margin-right: 5px;
+  font-size: 16px;
+}
+
+.file-list {
+  list-style-type: none;
+  padding-left: 20px;
+}
+
+.file-list li > button::before {
+  content: "📄";
+  margin-right: 5px;
+  font-size: 16px;
+}
+
+/* Adjust button styles for tree structure */
+.year-list button,
+.file-list button {
+  background: none;
+  box-shadow: none;
+  padding: 5px;
+  margin: 0;
+  color: white;
+  text-align: left;
+  width: 100%;
+}
+
+.year-list button:hover,
+.file-list button:hover {
+  text-decoration: underline;
+  background: none;
+  transform: none;
 }

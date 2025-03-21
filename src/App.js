@@ -26,16 +26,18 @@ const App = () => {
   const [modelFrom, setModelFrom] = useState(1);
   const [modelTo, setModelTo] = useState(2);
   const [popupContent, setPopupContent] = useState("");
+  const [isDraftOpen, setIsDraftOpen] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-  const [row29Sum, setRow29Sum] = useState(0); // Added state
+  const [row29Sum, setRow29Sum] = useState(0);
   const [hyperformulaInstance] = useState(() =>
     HyperFormula.buildEmpty({ licenseKey: "internal-use-in-handsontable" })
   );
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [highlightRows, setHighlightRows] = useState(initialHighlightRows);
+  // const [userBrand, setUserBrand] = useState("Your Brand"); // Added for brand classification
   const navigate = useNavigate();
 
-  // Helper functions remain unchanged
+  // Helper functions (unchanged)
   const getColumnLetter = (colIndex) => {
     let letter = "";
     let temp = colIndex;
@@ -187,7 +189,6 @@ const App = () => {
           const parsedHighlightRows = Array.isArray(result.highlightRows)
             ? result.highlightRows
             : JSON.parse(result.highlightRows);
-          console.log("Setting highlightRows to:", parsedHighlightRows);
           setHighlightRows(parsedHighlightRows || initialHighlightRows);
           setTimeout(() => {
             hotTableRef.current?.hotInstance?.render();
@@ -235,57 +236,47 @@ const App = () => {
     }
   };
 
-  const saveData = async () => {
-
-    if (row29Sum > 100) {
-      alert("Cannot save: Sum of percentages in row 29 exceeds 100");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    const jsonData = [];
-    dataRows.forEach((row, rowIndex) => {
-      row.forEach((cell, colIndex) => {
-        const field_key = getColumnLetter(colIndex) + (rowIndex + 1);
-        jsonData.push({ field_key, field_value: cell });
-      });
+// **Modified Function: Save Data (Clear Draft)**
+const saveData = async () => {
+  if (row29Sum > 100) {
+    alert("Cannot save: Sum of percentages in row 29 exceeds 100");
+    return;
+  }
+  const token = localStorage.getItem("token");
+  const jsonData = [];
+  dataRows.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      const field_key = getColumnLetter(colIndex) + (rowIndex + 1);
+      jsonData.push({ field_key, field_value: cell });
     });
-    try {
-      const payload = {
-        data: jsonData,
-        highlightRows: highlightRows,
-      };
-      const response = await fetch(
-        "https://vwgbackend.onrender.com/api/saveFiles",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-      const result = await response.json();
-      if (response.ok) {
-        alert(result.message);
-        // Check for a new token in the response and update localStorage
-        if (result.newToken) {
-          localStorage.setItem("token", result.newToken);
-        }
-        // Refresh years to ensure consistency with the new token
-        fetchYears();
-      } else if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem("token");
-        navigate("/login");
-      } else {
-        alert(result.error || "Error saving file");
-      }
-    } catch (error) {
-      console.error("Error saving data:", error);
-      alert("Error saving data");
+  });
+  try {
+    const payload = { data: jsonData, highlightRows };
+    const response = await fetch("https://vwgbackend.onrender.com/api/saveFiles", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      alert(result.message);
+      if (result.newToken) localStorage.setItem("token", result.newToken);
+      fetchYears();
+      setIsDraftOpen(false); // Clear draft state
+    } else if (response.status === 401 || response.status === 403) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    } else {
+      alert(result.error || "Error saving file");
     }
-  };
+  } catch (error) {
+    console.error("Error saving data:", error);
+    alert("Error saving data");
+  }
+};
 
   const exportCSV = () => {
     const dataToExport = dataRows.map((row) =>
@@ -375,7 +366,6 @@ const App = () => {
     }, 0);
   };
 
-
   const calculateRow29Sum = () => {
     const hot = hotTableRef.current?.hotInstance;
     if (!hot) return;
@@ -383,7 +373,7 @@ const App = () => {
     for (let col = 2; col < hot.countCols(); col++) {
       const cellValue = hyperformulaInstance.getCellValue({
         sheet: 0,
-        row: 28, // Row 29 (0-based index)
+        row: 28,
         col,
       });
       if (typeof cellValue === "number") {
@@ -392,6 +382,90 @@ const App = () => {
     }
     setRow29Sum(sum);
   };
+
+  const saveDraft = async () => {
+    const token = localStorage.getItem("token");
+    const jsonData = [];
+    dataRows.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        const field_key = getColumnLetter(colIndex) + (rowIndex + 1);
+        jsonData.push({ field_key, field_value: cell });
+      });
+    });
+    try {
+      const payload = { data: jsonData, highlightRows };
+      const response = await fetch("https://vwgbackend.onrender.com/api/saveDraft", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        alert("Draft saved successfully");
+      } else {
+        alert(result.error || "Error saving draft");
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      alert("Error saving draft");
+    }
+  };
+
+  // **New Function: Open Draft**
+  const openDraft = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch("https://vwgbackend.onrender.com/api/getDraft", {
+        headers: { Authorization: token },
+      });
+      if (response.status === 404) {
+        alert("No draft found");
+        return;
+      }
+      const result = await response.json();
+      if (response.ok) {
+        const cellData = result.data
+          .map((item) => {
+            const pos = parseFieldKey(item.field_key);
+            return pos ? { row: pos.row, col: pos.col, value: item.field_value } : null;
+          })
+          .filter((item) => item !== null);
+
+        if (cellData.length > 0) {
+          const maxRow = Math.max(...cellData.map((cell) => cell.row)) + 1;
+          const maxCol = Math.max(...cellData.map((cell) => cell.col)) + 1;
+          const initialData = Array.from({ length: maxRow }, () => Array(maxCol).fill(""));
+          cellData.forEach((cell) => {
+            initialData[cell.row][cell.col] = cell.value;
+          });
+          setDataRows(initialData);
+          const newHeaders = [];
+          for (let i = 0; i < maxCol; i++) {
+            if (i === 0) newHeaders.push("Code");
+            else if (i === 1) newHeaders.push("Parameters");
+            else newHeaders.push(`Model ${i - 1}`);
+          }
+          setHeaders(newHeaders);
+          setHighlightRows(result.highlightRows || initialHighlightRows);
+          setIsEditable(true);
+          setIsDraftOpen(true);
+          setTimeout(() => {
+            hotTableRef.current?.hotInstance?.render();
+          }, 0);
+        }
+      } else {
+        alert(result.error || "Error fetching draft");
+      }
+    } catch (error) {
+      console.error("Error fetching draft:", error);
+      alert("Error fetching draft");
+    }
+  };
+
+
 
   const hotSettings = {
     data: dataRows,
@@ -434,26 +508,21 @@ const App = () => {
     afterChange: (changes) => {
       if (changes && isEditable) {
         changes.forEach(([row, col, oldVal, newVal]) => {
-          if (row === 28 && col >= 2) { // Row 29, Model columns
+          if (row === 28 && col >= 2) {
             const parsedValue = parseFloat(newVal);
             const hot = hotTableRef.current.hotInstance;
-
-            // Check for non-numeric or invalid percentage
             if (isNaN(parsedValue) || parsedValue < 0 || parsedValue > 100) {
               alert("Invalid input: Only numbers between 0 and 100 are allowed.");
-              hot.setDataAtCell(row, col, oldVal); // Revert to previous value
+              hot.setDataAtCell(row, col, oldVal);
               return;
             }
-
-            // Calculate sum excluding the current cell's old value
             const currentSum = row29Sum - (parseFloat(oldVal) || 0);
             if (currentSum + parsedValue > 100) {
               alert("Sum of percentages in row 29 cannot exceed 100.");
-              hot.setDataAtCell(row, col, oldVal); // Revert to previous value
+              hot.setDataAtCell(row, col, oldVal);
               return;
             }
           }
-          // If valid, update HyperFormula
           hyperformulaInstance.setCellContents(
             { sheet: 0, row, col },
             [[newVal]]
@@ -528,7 +597,7 @@ const App = () => {
         setPopupContent(content);
         setPopupPosition({
           x: cellRect.left + window.scrollX,
-          y: cellRect.bottom + window.scrollY,
+          y: cellRect.top + window.scrollY, // Changed to appear above the cell
         });
       } else {
         setPopupContent("");
@@ -552,20 +621,29 @@ const App = () => {
           <img src="/logo.png" alt="Logo" className="app-logo" />
           <div className="side-nav">
             <h2>PBU</h2>
-            {years.map((year) => (
-              <button key={year} onClick={() => fetchFiles(year)}>
-                PBU {year}
-              </button>
-            ))}
-            <h3>Files for {selectedYear} PBU</h3>
-            {files.map((file) => (
-              <button
-                key={file.excel_id}
-                onClick={() => fetchPBUData(file.excel_id)}
-              >
-                {file.displayName}
-              </button>
-            ))}
+            
+            <ul className="year-list">
+              {years.map((year) => (
+                <li key={year}>
+                  <button onClick={() => fetchFiles(year)}>
+                    PBU {year}
+                  </button>
+
+                  <button onClick={openDraft}>Open Draft</button> {/* New Button */}
+                  {selectedYear === year && files.length > 0 && (
+                    <ul className="file-list">
+                      {files.map((file) => (
+                        <li key={file.excel_id}>
+                          <button onClick={() => fetchPBUData(file.excel_id)}>
+                            {file.displayName}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         </>
       )}
@@ -602,10 +680,13 @@ const App = () => {
                     </option>
                   ))}
                 </select>
+                
                 <button onClick={handleCopyToNextColumn}>Copy</button>
               </div>
             )}
           </div>
+
+          <button onClick={saveDraft}>Save as Draft</button> {/* New Button */}
           <button onClick={saveData}>Save</button>
           <button id="logout" onClick={handleLogout}>
             Logout
