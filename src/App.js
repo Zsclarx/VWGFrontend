@@ -34,7 +34,7 @@ const App = () => {
   );
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [highlightRows, setHighlightRows] = useState(initialHighlightRows);
-  // const [userBrand, setUserBrand] = useState("Your Brand"); // Added for brand classification
+  const [userBrand, setUserBrand] = useState(""); // Added for brand classification
   const navigate = useNavigate();
 
   // Helper functions (unchanged)
@@ -69,10 +69,35 @@ const App = () => {
     if (!token) {
       navigate("/login");
     } else {
+      fetchUserDetails(token);
       fetchYears();
       createNewPBUTemplate();
     }
   }, [navigate]);
+
+  const fetchUserDetails = async (token) => {
+    try {
+      const response = await fetch("https://vwgbackend.onrender.com/api/getUserDetails", {
+        headers: {
+          Authorization: token,
+        },
+      });
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
+      const result = await response.json();
+      if (response.ok) {
+        setUserBrand(result.brand); // Set the brand from backend response
+      } else {
+        alert(result.error || "Error fetching user details");
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      alert("Error fetching user details");
+    }
+  };
 
   const fetchYears = async () => {
     const token = localStorage.getItem("token");
@@ -136,6 +161,7 @@ const App = () => {
       console.error("Error fetching files:", error);
       alert("Error fetching files");
     }
+    
   };
 
   const fetchPBUData = async (file) => {
@@ -205,6 +231,7 @@ const App = () => {
       console.error("Error fetching PBU data:", error);
       alert("Error fetching PBU data");
     }
+
   };
 
   const createNewPBUTemplate = async () => {
@@ -234,49 +261,49 @@ const App = () => {
       console.error("Error fetching template data:", error);
       alert("Error fetching template data");
     }
+
   };
 
-// **Modified Function: Save Data (Clear Draft)**
-const saveData = async () => {
-  if (row29Sum > 100) {
-    alert("Cannot save: Sum of percentages in row 29 exceeds 100");
-    return;
-  }
-  const token = localStorage.getItem("token");
-  const jsonData = [];
-  dataRows.forEach((row, rowIndex) => {
-    row.forEach((cell, colIndex) => {
-      const field_key = getColumnLetter(colIndex) + (rowIndex + 1);
-      jsonData.push({ field_key, field_value: cell });
-    });
-  });
-  try {
-    const payload = { data: jsonData, highlightRows };
-    const response = await fetch("https://vwgbackend.onrender.com/api/saveFiles", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-      body: JSON.stringify(payload),
-    });
-    const result = await response.json();
-    if (response.ok) {
-      alert(result.message);
-      if (result.newToken) localStorage.setItem("token", result.newToken);
-      fetchYears();
-      setIsDraftOpen(false); // Clear draft state
-    } else if (response.status === 401 || response.status === 403) {
-      localStorage.removeItem("token");
-      navigate("/login");
-    } else {
-      alert(result.error || "Error saving file");
+  const saveData = async () => {
+    if (row29Sum > 100) {
+      alert("Cannot save: Sum of percentages in row 29 exceeds 100");
+      return;
     }
-  } catch (error) {
-    console.error("Error saving data:", error);
-    alert("Error saving data");
-  }
-};
+    const token = localStorage.getItem("token");
+    const jsonData = [];
+    dataRows.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        const field_key = getColumnLetter(colIndex) + (rowIndex + 1);
+        jsonData.push({ field_key, field_value: cell });
+      });
+    });
+    try {
+      const payload = { data: jsonData, highlightRows };
+      const response = await fetch("https://vwgbackend.onrender.com/api/saveFiles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        alert(result.message);
+        if (result.newToken) localStorage.setItem("token", result.newToken);
+        fetchYears();
+        setIsDraftOpen(false);
+      } else if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      } else {
+        alert(result.error || "Error saving file");
+      }
+    } catch (error) {
+      console.error("Error saving data:", error);
+      alert("Error saving data");
+    }
+  };
 
   const exportCSV = () => {
     const dataToExport = dataRows.map((row) =>
@@ -385,9 +412,9 @@ const saveData = async () => {
 
   const toggleFiles = (year) => {
     if (selectedYear === year) {
-      setSelectedYear(null); // Hide the file list
+      setSelectedYear(null);
     } else {
-      fetchFiles(year); // Fetch files and show the list
+      fetchFiles(year);
     }
   };
 
@@ -422,63 +449,58 @@ const saveData = async () => {
     }
   };
 
-
-  // **New Function: Open Draft**
   const openDraft = async () => {
-  const token = localStorage.getItem("token");
-  try {
-    const response = await fetch("https://vwgbackend.onrender.com/api/getDraft", {
-      headers: { Authorization: token },
-    });
-    if (response.status === 404) {
-      alert("No draft found");
-      return;
-    }
-    const result = await response.json();
-    if (response.ok) {
-      const cellData = result.data
-        .map((item) => {
-          const pos = parseFieldKey(item.field_key);
-          return pos ? { row: pos.row, col: pos.col, value: item.field_value } : null;
-        })
-        .filter((item) => item !== null);
-
-      if (cellData.length > 0) {
-        const maxRow = Math.max(...cellData.map((cell) => cell.row)) + 1;
-        const maxCol = Math.max(...cellData.map((cell) => cell.col)) + 1;
-        const initialData = Array.from({ length: maxRow }, () => Array(maxCol).fill(""));
-        cellData.forEach((cell) => {
-          initialData[cell.row][cell.col] = cell.value;
-        });
-        setDataRows(initialData);
-        const newHeaders = [];
-        for (let i = 0; i < maxCol; i++) {
-          if (i === 0) newHeaders.push("Code");
-          else if (i === 1) newHeaders.push("Parameters");
-          else newHeaders.push(`Model ${i - 1}`);
-        }
-        setHeaders(newHeaders);
-        // Ensure highlightRows is an array; minimal parsing if backend is fixed
-        const parsedHighlightRows = Array.isArray(result.highlightRows)
-          ? result.highlightRows
-          : initialHighlightRows;
-        setHighlightRows(parsedHighlightRows);
-        setIsEditable(true);
-        setIsDraftOpen(true);
-        setTimeout(() => {
-          hotTableRef.current?.hotInstance?.render();
-        }, 0);
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch("https://vwgbackend.onrender.com/api/getDraft", {
+        headers: { Authorization: token },
+      });
+      if (response.status === 404) {
+        alert("No draft found");
+        return;
       }
-    } else {
-      alert(result.error || "Error fetching draft");
+      const result = await response.json();
+      if (response.ok) {
+        const cellData = result.data
+          .map((item) => {
+            const pos = parseFieldKey(item.field_key);
+            return pos ? { row: pos.row, col: pos.col, value: item.field_value } : null;
+          })
+          .filter((item) => item !== null);
+
+        if (cellData.length > 0) {
+          const maxRow = Math.max(...cellData.map((cell) => cell.row)) + 1;
+          const maxCol = Math.max(...cellData.map((cell) => cell.col)) + 1;
+          const initialData = Array.from({ length: maxRow }, () => Array(maxCol).fill(""));
+          cellData.forEach((cell) => {
+            initialData[cell.row][cell.col] = cell.value;
+          });
+          setDataRows(initialData);
+          const newHeaders = [];
+          for (let i = 0; i < maxCol; i++) {
+            if (i === 0) newHeaders.push("Code");
+            else if (i === 1) newHeaders.push("Parameters");
+            else newHeaders.push(`Model ${i - 1}`);
+          }
+          setHeaders(newHeaders);
+          const parsedHighlightRows = Array.isArray(result.highlightRows)
+            ? result.highlightRows
+            : initialHighlightRows;
+          setHighlightRows(parsedHighlightRows);
+          setIsEditable(true);
+          setIsDraftOpen(true);
+          setTimeout(() => {
+            hotTableRef.current?.hotInstance?.render();
+          }, 0);
+        }
+      } else {
+        alert(result.error || "Error fetching draft");
+      }
+    } catch (error) {
+      console.error("Error fetching draft:", error);
+      alert("Error fetching draft");
     }
-  } catch (error) {
-    console.error("Error fetching draft:", error);
-    alert("Error fetching draft");
-  }
-};
-
-
+  };
 
   const hotSettings = {
     data: dataRows,
@@ -610,7 +632,7 @@ const saveData = async () => {
         setPopupContent(content);
         setPopupPosition({
           x: cellRect.left + window.scrollX,
-          y: cellRect.top + window.scrollY, // Changed to appear above the cell
+          y: cellRect.top + window.scrollY,
         });
       } else {
         setPopupContent("");
@@ -629,33 +651,34 @@ const saveData = async () => {
 
   return (
     <div className="app-container">
+      
       {years.length > 0 && (
         <>
-          <img src="/logo.png" alt="Logo" className="app-logo" />
+          <img src={`/${userBrand}.png`} alt="Brand Logo" className="app-logo" />
           <div className="side-nav">
-  <h2>PBU</h2>
-  <button onClick={openDraft}>Open Draft</button> {/* Moved outside the list */}
-  <ul className="year-list">
-    {years.map((year) => (
-      <li key={year}>
-        <button onClick={() => toggleFiles(year)}>
-          PBU {year}
-        </button>
-        {selectedYear === year && files.length > 0 && (
-          <ul className="file-list">
-            {files.map((file) => (
-              <li key={file.excel_id}>
-                <button onClick={() => fetchPBUData(file.excel_id)}>
-                  {file.displayName}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </li>
-    ))}
-  </ul>
-</div>
+            <h2>PBU</h2>
+            <button onClick={openDraft}>Open Draft</button>
+            <ul className="year-list">
+              {years.map((year) => (
+                <li key={year}>
+                  <button onClick={() => toggleFiles(year)}>
+                    PBU {year}
+                  </button>
+                  {selectedYear === year && files.length > 0 && (
+                    <ul className="file-list">
+                      {files.map((file) => (
+                        <li key={file.excel_id}>
+                          <button onClick={() => fetchPBUData(file.excel_id)}>
+                            {file.displayName}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         </>
       )}
       <div className="main-container">
@@ -691,13 +714,11 @@ const saveData = async () => {
                     </option>
                   ))}
                 </select>
-                
                 <button onClick={handleCopyToNextColumn}>Copy</button>
               </div>
             )}
           </div>
-
-          <button onClick={saveDraft}>Save as Draft</button> {/* New Button */}
+          <button onClick={saveDraft}>Save as Draft</button>
           <button onClick={saveData}>Save</button>
           <button id="logout" onClick={handleLogout}>
             Logout

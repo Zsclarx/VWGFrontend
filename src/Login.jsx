@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import Image from "./bgImage.png";
 import Logo from "./LoginPageLogo.png";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import "./login.css"
 
 const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
+    brand: '',
+    role: '',
     password: ''
   });
   const navigate = useNavigate();
@@ -95,8 +97,6 @@ const Login = ({ onLogin }) => {
     }
   };
 
-
-
   return (
     <div className="login-main">
       <div className="login-left">
@@ -112,25 +112,43 @@ const Login = ({ onLogin }) => {
             <p>{isRegistering ? 'Create your account' : 'Please enter your details'}</p>
 
             <form onSubmit={isRegistering ? handleRegisterSubmit : handleLoginSubmit}>
-              <input 
-                type="text" 
-                placeholder="Username" 
-                name="username"
-                value={formData.username} 
-                onChange={handleInputChange} 
+              <select
+                name="brand"
+                value={formData.brand}
+                onChange={handleInputChange}
                 required
-              />
+              >
+                <option value="">Select Brand</option>
+                <option value="VW PC">VW PC</option>
+                <option value="AUDI">AUDI</option>
+                <option value="SEAT">SEAT</option>
+                <option value="SKODA">SKODA</option>
+                <option value="CV">CV</option>
+              </select>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select Role</option>
+                <option value="HEAD OF PRODUCT PLANNING">HEAD OF PRODUCT PLANNING</option>
+                <option value="PRODUCT MARKETING MANAGER">PRODUCT MARKETING MANAGER</option>
+                <option value="PRODUCT MANAGER">PRODUCT MANAGER</option>
+                <option value="PRODUCT SUPPORT MANAGER">PRODUCT SUPPORT MANAGER</option>
+                <option value="PRODUCT ANALYST">PRODUCT ANALYST</option>
+              </select>
               <div className="pass-input-div">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Password" 
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
                   name="password"
-                  value={formData.password} 
-                  onChange={handleInputChange} 
+                  value={formData.password}
+                  onChange={handleInputChange}
                   required
                 />
-                {showPassword ? 
-                  <FaEyeSlash onClick={() => setShowPassword(false)} /> : 
+                {showPassword ?
+                  <FaEyeSlash onClick={() => setShowPassword(false)} /> :
                   <FaEye onClick={() => setShowPassword(true)} />
                 }
               </div>

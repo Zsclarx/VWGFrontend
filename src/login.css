@@ -1,0 +1,35 @@
+/* Style for dropdowns */
+select {
+    width: 100%;           /* Matches the width of other inputs */
+    padding: 10px;         /* Adds padding for better usability */
+    font-size: 16px;       /* Consistent font size */
+    border: 1px solid #ccc;/* Light border for a clean look */
+    border-radius: 4px;    /* Rounded corners */
+    background-color: #fff;/* White background */
+    margin-bottom: 15px;   /* Space below each dropdown */
+    box-sizing: border-box;/* Ensures padding doesn't affect width */
+    appearance: none;      /* Removes default arrow (optional) */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  
+  /* Optional: Add a custom dropdown arrow */
+  select {
+    position: relative;
+  }
+  
+  select::after {
+    content: '▼';          /* Unicode down arrow */
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;  /* Prevents arrow from interfering with clicks */
+  }
+  
+  /* Ensure form elements are spaced nicely */
+  .login-center form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;            /* Space between form elements */
+  }
